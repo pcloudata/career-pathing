@@ -1,141 +1,194 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Skill, UserSkill, AssessmentResult } from '../types/skill';
+import crypto from 'crypto';
+import { Skill, SkillCategory, UserSkill, AssessmentResult, ApiError } from '../types';
+import { apiService } from '../services/api';
 
 interface SkillAssessmentContextType {
   skills: Skill[];
+  skillCategories: SkillCategory[];
   userSkills: UserSkill[];
   selectedSkills: string[];
   assessmentResult: AssessmentResult | null;
+  loading: boolean;
+  error: ApiError | null;
   loadSkills: () => Promise<void>;
+  loadSkillCategories: () => Promise<void>;
   assessSkills: (skillIds: string[]) => Promise<AssessmentResult>;
-  updateSkillProficiency: (skillId: string, proficiency: number) => void;
-  handleSkillSelect: (skillId: string) => void;
-  startAssessment: () => void;
+  updateSkillProficiency: (skillId: string, proficiency: number) => Promise<void>;
+  selectSkill: (skillId: string) => void;
+  deselectSkill: (skillId: string) => void;
+  clearAssessment: () => void;
 }
 
 const SkillAssessmentContext = createContext<SkillAssessmentContextType | undefined>(undefined);
 
 export const SkillAssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const userId = '1'; // TODO: Replace with actual user ID
 
   const loadSkills = async () => {
-    // TODO: Implement API call to fetch skills
-    // For now, using mock data
-    const mockSkills: Skill[] = [
-      {
-        id: '1',
-        name: 'JavaScript',
-        category: 'Programming Languages',
-        description: 'A programming language that is commonly used to create interactive effects within web browsers.',
-        proficiencyLevels: [
-          { level: 1, name: 'Beginner', description: 'Basic understanding', criteria: ['Knows basic syntax', 'Can write simple scripts'] },
-          { level: 2, name: 'Intermediate', description: 'Comfortable with core concepts', criteria: ['Understands DOM manipulation', 'Can use ES6+ features'] },
-          { level: 3, name: 'Advanced', description: 'Expert knowledge', criteria: ['Can write complex applications', 'Understands async programming'] }
-        ],
-        relatedSkills: ['React', 'Node.js', 'TypeScript']
-      },
-      {
-        id: '2',
-        name: 'React',
-        category: 'Frontend Frameworks',
-        description: 'A JavaScript library for building user interfaces.',
-        proficiencyLevels: [
-          { level: 1, name: 'Beginner', description: 'Basic component creation', criteria: ['Can create functional components', 'Understands props'] },
-          { level: 2, name: 'Intermediate', description: 'State management and hooks', criteria: ['Uses useState and useEffect', 'Understands context'] },
-          { level: 3, name: 'Advanced', description: 'Expert knowledge', criteria: ['Builds complex applications', 'Understands performance optimization'] }
-        ],
-        relatedSkills: ['JavaScript', 'TypeScript', 'Redux']
-      },
-      {
-        id: '3',
-        name: 'Python',
-        category: 'Programming Languages',
-        description: 'A high-level programming language with a focus on code readability.',
-        proficiencyLevels: [
-          { level: 1, name: 'Beginner', description: 'Basic syntax and data structures', criteria: ['Can write simple scripts', 'Understands loops and conditionals'] },
-          { level: 2, name: 'Intermediate', description: 'Advanced concepts', criteria: ['Uses classes and objects', 'Understands file operations'] },
-          { level: 3, name: 'Advanced', description: 'Expert knowledge', criteria: ['Builds complex applications', 'Understands async programming'] }
-        ],
-        relatedSkills: ['Data Science', 'Machine Learning', 'Django']
-      },
-      {
-        id: '4',
-        name: 'SQL',
-        category: 'Database',
-        description: 'Structured Query Language for managing and querying databases.',
-        proficiencyLevels: [
-          { level: 1, name: 'Beginner', description: 'Basic queries', criteria: ['Can write SELECT statements', 'Understands basic joins'] },
-          { level: 2, name: 'Intermediate', description: 'Advanced queries', criteria: ['Writes complex queries', 'Understands indexing'] },
-          { level: 3, name: 'Advanced', description: 'Expert knowledge', criteria: ['Optimizes queries', 'Understands database design'] }
-        ],
-        relatedSkills: ['Data Analysis', 'Database Design', 'ETL']
-      }
-    ];
-    setSkills(mockSkills);
+    try {
+      setLoading(true);
+      setError(null);
+      const loadSkills = async () => {
+        try {
+          const fetchedSkills = await apiService.functions.fetchSkills();
+          setSkills(fetchedSkills);
+        } catch (error) {
+          console.error('Error loading skills:', error);
+          setSkills([]);
+        }
+      };
+      await loadSkills();
+    } catch (error) {
+      console.error('Error loading skills:', error);
+      setError(error as ApiError);
+      setSkills([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSkillCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const categories = await apiService.functions.fetchSkillCategories();
+      setSkillCategories(categories);
+    } catch (error) {
+      console.error('Error loading skill categories:', error);
+      setError(error as ApiError);
+      setSkillCategories([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const assessSkills = async (skillIds: string[]): Promise<AssessmentResult> => {
-    // TODO: Implement actual assessment logic
-    const result: AssessmentResult = {
-      userId: '1',
-      skills: userSkills.filter(skill => skillIds.includes(skill.skillId)),
-      strengths: ['JavaScript', 'React'],
-      weaknesses: ['Node.js', 'TypeScript'],
-      recommendations: ['Take advanced JavaScript course', 'Start learning TypeScript'],
-      overallScore: 75
-    };
-    setAssessmentResult(result);
-    return result;
-  };
-
-  const updateSkillProficiency = (skillId: string, proficiency: number) => {
-    setUserSkills(prev => {
-      const existingSkill = prev.find(s => s.skillId === skillId);
-      if (existingSkill) {
-        return prev.map(s => 
-          s.skillId === skillId 
-            ? { ...s, proficiency, lastAssessed: new Date() }
-            : s
-        );
-      }
-      return [...prev, { skillId, proficiency, confidence: 0.8, lastAssessed: new Date() }];
-    });
-  };
-
-  const handleSkillSelect = (skillId: string) => {
-    setSelectedSkills(prev => 
-      prev.includes(skillId) 
-        ? prev.filter(id => id !== skillId)
-        : [...prev, skillId]
-    );
-  };
-
-  const startAssessment = () => {
-    if (selectedSkills.length === 0) {
-      alert('Please select at least one skill to assess');
-      return;
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await apiService.functions.startAssessment(userId, skillIds);
+      setAssessmentResult(result);
+      return result;
+    } catch (error) {
+      console.error('Error starting assessment:', error);
+      setError(error as ApiError);
+      const fallbackResult: AssessmentResult = {
+        userId,
+        skills: userSkills.filter(skill => skillIds.includes(skill.skillId)),
+        strengths: ['JavaScript', 'React'],
+        weaknesses: ['Node.js', 'TypeScript'],
+        recommendations: ['Take advanced JavaScript course', 'Start learning TypeScript'],
+        overallScore: 75
+      };
+      setAssessmentResult(fallbackResult);
+      return fallbackResult;
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const updateSkillProficiency = async (skillId: string, proficiency: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const updatedSkill = await apiService.functions.updateUserSkill(userId, skillId, proficiency);
+      setUserSkills(prev => {
+        const existingSkill = prev.find(s => s.skillId === skillId);
+        if (existingSkill) {
+          return prev.map(s => 
+            s.skillId === skillId 
+              ? { 
+                  ...s, 
+                  proficiency: updatedSkill.proficiency, 
+                  lastAssessed: updatedSkill.lastAssessed,
+                  lastUpdated: updatedSkill.lastUpdated
+                }
+              : s
+          );
+        }
+        return [...prev, { 
+          id: crypto.randomUUID(),
+          userId,
+          skillId,
+          proficiency: updatedSkill.proficiency,
+          confidence: 0.8,
+          lastAssessed: updatedSkill.lastAssessed,
+          lastUpdated: new Date()
+        } as UserSkill];
+      });
+    } catch (error) {
+      console.error('Error updating skill proficiency:', error);
+      setError(error as ApiError);
+      setUserSkills(prev => {
+        const existingSkill = prev.find(s => s.skillId === skillId);
+        if (existingSkill) {
+          return prev.map(s => 
+            s.skillId === skillId 
+              ? { 
+                  ...s, 
+                  proficiency,
+                  lastAssessed: new Date(),
+                  lastUpdated: new Date()
+                }
+              : s
+          );
+        }
+        return [...prev, { 
+          id: crypto.randomUUID(),
+          userId,
+          skillId,
+          proficiency,
+          confidence: 0.8,
+          lastAssessed: new Date(),
+          lastUpdated: new Date()
+        } as UserSkill];
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectSkill = (skillId: string) => {
+    setSelectedSkills(prev => [...prev, skillId]);
+  };
+
+  const deselectSkill = (skillId: string) => {
+    setSelectedSkills(prev => prev.filter(id => id !== skillId));
+  };
+
+  const clearAssessment = () => {
     setAssessmentResult(null);
   };
 
   useEffect(() => {
     loadSkills();
+    loadSkillCategories();
   }, []);
 
   return (
     <SkillAssessmentContext.Provider value={{
       skills,
+      skillCategories,
       userSkills,
       selectedSkills,
       assessmentResult,
+      loading,
+      error,
       loadSkills,
+      loadSkillCategories,
       assessSkills,
       updateSkillProficiency,
-      handleSkillSelect,
-      startAssessment
+      selectSkill,
+      deselectSkill,
+      clearAssessment
     }}>
       {children}
     </SkillAssessmentContext.Provider>
@@ -149,3 +202,5 @@ export const useSkillAssessment = () => {
   }
   return context;
 };
+
+export default SkillAssessmentContext;

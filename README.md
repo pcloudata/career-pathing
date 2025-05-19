@@ -1,6 +1,83 @@
-# Getting Started with Create React App
+# Career Pathing Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A platform for skill assessment and career pathing.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+- Firebase account (free tier available)
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/career-pathing.git
+cd career-pathing
+```
+
+2. Install dependencies
+```bash
+npm install
+```
+
+3. Set up Firebase
+
+   a. Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
+   b. Copy your Firebase configuration from the Firebase Console
+   c. Create a `.env` file in the root directory (copy from `.env.example`)
+   d. Fill in your Firebase configuration values in the `.env` file
+
+4. Seed initial data
+```bash
+npm run seed
+```
+
+5. Test API functionality
+```bash
+npm run test:api
+```
+
+6. Start the development server
+```bash
+npm start
+```
+
+### Environment Variables
+
+Create a `.env` file in the root directory and add your Firebase configuration:
+
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+
+NEXT_PUBLIC_API_URL=https://api.careerpathing.com
+```
+
+### Firebase Configuration
+
+1. Create a new Firebase project at [Firebase Console](https://console.firebase.google.com)
+2. Enable Firestore Database
+3. Copy your Firebase configuration from the Firebase Console
+4. Create a `.env` file in the root directory (copy from `.env.example`)
+5. Fill in your Firebase configuration values in the `.env` file
+6. Deploy the security rules:
+```bash
+firebase deploy --only firestore:rules
+```
+7. Deploy the indexes:
+```bash
+firebase deploy --only firestore:indexes
+```
+
+Note: Never commit your `.env` file to version control. Use `.env.example` as a template.
 
 ## Available Scripts
 

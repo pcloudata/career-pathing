@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import { SkillAssessmentProvider } from './context/SkillAssessmentContext';
 import SkillAssessment from './components/SkillAssessment';
+import SkillAssessmentTest from './components/SkillAssessmentTest';
 import './components/SkillAssessment.css';
 
 function App() {
@@ -15,6 +16,9 @@ function App() {
         </header>
         <main>
           <SkillAssessment />
+          <hr />
+          <h2>Test Interface</h2>
+          <SkillAssessmentTest />
         </main>
       </div>
     </SkillAssessmentProvider>
